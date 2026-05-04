@@ -85,7 +85,20 @@ export class TTLock extends TTLockApi implements TTLock {
     }
     this.connecting = true;
     this.skipDataRead = skipDataRead;
-    const connected = await this.device.connect();
+    
+    let connected = false;
+    let retries = 0;
+    const maxRetries = 5;
+    
+    while (!connected && retries < maxRetries) {
+      connected = await this.device.connect();
+      if (!connected) {
+        console.log(`Lock connect failed, retrying... (${retries + 1}/${maxRetries})`);
+        retries++;
+        await sleep(1000); // Wait a bit before retrying
+      }
+    }
+
     let timeoutCycles = timeout * 10;
     if (connected) {
       console.log("Lock waiting for connection to be completed");
@@ -94,7 +107,7 @@ export class TTLock extends TTLockApi implements TTLock {
         timeoutCycles--;
       } while (!this.connected && timeoutCycles > 0 && this.connecting);
     } else {
-      console.log("Lock connect failed");
+      console.log("Lock connect failed after max retries");
     }
     this.skipDataRead = false;
     this.connecting = false;

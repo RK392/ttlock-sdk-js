@@ -62,6 +62,7 @@ export class OperationLogCommand extends Command {
               }
               break;
 
+            case LogOperate.OPERATE_TYPE_CUSTOM_PASSCODE_UNLOCK: // <-- Added Event 93
             case LogOperate.OPERATE_TYPE_KEYBOARD_PASSWORD_UNLOCK:
             case LogOperate.OPERATE_TYPE_USE_DELETE_CODE:
             case LogOperate.OPERATE_TYPE_PASSCODE_EXPIRED:
@@ -156,9 +157,12 @@ export class OperationLogCommand extends Command {
               pwdLen = recLen - (index - recStart);
               if (pwdLen > 0) {
                 console.error("LogOperate not implemented", log.recordType, "Data left:", this.commandData.slice(index, index + pwdLen).toString("hex"));
-                index = recStart + recLen;
               }
           }
+
+          // Universal Index Realigner: Always forces the index to the exact 
+          // end of the record, skipping any undocumented telemetry bytes.
+          index = recStart + recLen;
 
           this.logs.push(log);
         }
