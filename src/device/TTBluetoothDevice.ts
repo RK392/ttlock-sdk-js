@@ -96,6 +96,11 @@ export class TTBluetoothDevice extends TTDevice implements TTBluetoothDevice {
 
   private async onDeviceDisconnected() {
     this.connected = false;
+    // Clear pending command queues when connection drops
+    if (this.waitingForResponse) {
+      this.waitingForResponse = false;
+      this.responses = [];
+    }
     // console.log("TTBluetoothDevice disconnected", this.device?.id);
     this.emit("disconnected");
   }
@@ -201,9 +206,15 @@ export class TTBluetoothDevice extends TTDevice implements TTBluetoothDevice {
               // wait for a response
               // console.log("Waiting for response");
               let cycles = 0;
-              while (this.responses.length == 0 && this.connected) {
+              const maxCycles = 1000; // 5 second timeout (1000 * 5ms)
+              while (this.responses.length == 0 && this.connected && cycles < maxCycles) {
                 cycles++;
                 await sleep(5);
+              }
+              if (cycles >= maxCycles) {
+                this.waitingForResponse = false;
+                this.responses = [];
+                throw new Error("Command timed out after 5000ms because the lock stopped responding");
               }
               // console.log("Waited for a response for", cycles, "=", cycles * 5, "ms");
               if (!this.connected) {
