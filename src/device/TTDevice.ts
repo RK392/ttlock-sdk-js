@@ -64,9 +64,10 @@ export class TTDevice extends EventEmitter {
       if (!excludedKeys.has(key)) {
         const val = Reflect.get(this, key);
         if (typeof val != 'undefined' && ((typeof val == "string" && val != "") || typeof val != "string")) {
-          if ((typeof val) == "object") {
-            if (val.length && val.length > 0) {
-              Reflect.set(json, key, val.toString('hex'));
+          if ((typeof val) == "object" && val !== null) {
+            const anyVal = val as any;
+            if (anyVal.length && anyVal.length > 0) {
+              Reflect.set(json, key, anyVal.toString('hex'));
             }
           } else {
             Reflect.set(json, key, val);
