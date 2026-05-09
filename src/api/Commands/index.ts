@@ -31,3 +31,4 @@ export { ManageICCommand, ICCard } from "./ManageICCommand";
 export { CyclicDateCommand } from "./CyclicDateCommand";
 export { ManageFRCommand, Fingerprint } from "./ManageFRCommand";
 export { OperationLogCommand, LogEntry } from "./OperationLogCommand";
+export { GetLockTimeCommand } from "./GetLockTimeCommand";

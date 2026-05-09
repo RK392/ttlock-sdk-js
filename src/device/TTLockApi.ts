@@ -23,6 +23,7 @@ import {
   ICCard, ManageICCommand, ManageFRCommand, Fingerprint, LogEntry, OperationLogCommand
 } from "../api/Commands";
 import { PassageModeOperate } from "../constant/PassageModeOperate";
+import { GetLockTimeCommand } from "../api/Commands/GetLockTimeCommand";
 import { AdminType } from "./AdminType";
 import { CodeSecret } from "../api/Commands/InitPasswordsCommand";
 import { DeviceInfoEnum } from "../constant/DeviceInfoEnum";
@@ -241,6 +242,35 @@ export abstract class TTLockApi extends EventEmitter {
       }
     } else {
       throw new Error("No response to time calibration");
+    }
+  }
+  /**
+   * Get Lock Time command
+   */
+  protected async getLockTimeCommand(aesKey?: Buffer): Promise<number> {
+    if (typeof aesKey == "undefined") {
+      if (this.privateData.aesKey) {
+        aesKey = this.privateData.aesKey;
+      } else {
+        throw new Error("No AES key for lock");
+      }
+    }
+    const requestEnvelope = CommandEnvelope.createFromLockType(this.device.lockType, aesKey);
+    requestEnvelope.setCommandType(CommandType.COMM_GET_LOCK_TIME);
+    const responseEnvelope = await this.device.sendCommand(requestEnvelope, true, true);
+    if (responseEnvelope) {
+      responseEnvelope.setAesKey(aesKey);
+      const cmd = responseEnvelope.getCommand() as GetLockTimeCommand;
+      if (cmd.getResponse() != CommandResponse.SUCCESS) {
+        throw new Error("Failed getting lock time");
+      }
+      const lockTimestamp = cmd.getLockTimestamp();
+      if (typeof lockTimestamp == "undefined") {
+        throw new Error("Invalid get lock time response");
+      }
+      return lockTimestamp;
+    } else {
+      throw new Error("No response to get lock time");
     }
   }
 

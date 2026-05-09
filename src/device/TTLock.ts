@@ -555,6 +555,44 @@ export class TTLock extends TTLockApi implements TTLock {
     return false;
   }
 
+    async getLockTime(): Promise<number> {
+    if (!this.isConnected()) {
+      throw new Error("Lock is not connected");
+    }
+
+    if (!this.initialized) {
+      throw new Error("Lock is in pairing mode");
+    }
+
+    try {
+      console.log("========= get lock time");
+      const time = await this.getLockTimeCommand();
+      console.log("========= get lock time", time);
+      return time;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async syncLockTime(): Promise<boolean> {
+    if (!this.isConnected()) {
+      throw new Error("Lock is not connected");
+    }
+
+    if (!this.initialized) {
+      throw new Error("Lock is in pairing mode");
+    }
+
+    try {
+      console.log("========= sync lock time");
+      await this.calibrateTimeCommand();
+      console.log("========= sync lock time done");
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async resetLock(): Promise<boolean> {
     if (!this.isConnected()) {
       throw new Error("Lock is not connected");
