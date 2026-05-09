@@ -49,3 +49,4 @@ LogOperateNames[LogOperate.WIRELESS_KEY_FOB] = "Wireless key";
 LogOperateNames[LogOperate.WIRELESS_KEY_PAD] = "Wireless keyboard battery";
 
 // export default LogOperateNames;
+LogOperateNames[LogOperate.OP_ADD_KEYBOARD_PASSWORD] = "Add keyboard password";

@@ -62,7 +62,7 @@ export class OperationLogCommand extends Command {
               }
               break;
 
-            case LogOperate.OPERATE_TYPE_CUSTOM_PASSCODE_UNLOCK: // <-- Added Event 93
+            case LogOperate.OP_ADD_KEYBOARD_PASSWORD: // <-- Added Event 93
             case LogOperate.OPERATE_TYPE_KEYBOARD_PASSWORD_UNLOCK:
             case LogOperate.OPERATE_TYPE_USE_DELETE_CODE:
             case LogOperate.OPERATE_TYPE_PASSCODE_EXPIRED:

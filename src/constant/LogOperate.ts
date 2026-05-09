@@ -232,5 +232,5 @@ export enum LogOperate {
   /**
    * Custom Passcode unlock (Newer firmware)
    */
-  OPERATE_TYPE_CUSTOM_PASSCODE_UNLOCK = 93,
+  OP_ADD_KEYBOARD_PASSWORD = 93,
 }
