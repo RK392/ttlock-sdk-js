@@ -584,17 +584,16 @@ export class TTLock extends TTLockApi implements TTLock {
     }
 
     try {
-      // 1. Perform the authentication handshake FIRST
-      console.log("========= check user time (for time sync)");
-      await this.checkUserTime();
-      
-      // 2. Once authenticated, overwrite the clock
-      console.log("========= sync lock time");
-      // Note: We don't need to pass 'psFromLock' to calibrateTimeCommand 
-      // because 0x43 doesn't use the dynamic token, it just needs the channel authenticated.
-      await this.calibrateTimeCommand(); 
-      console.log("========= sync lock time done");
-      return true;
+      // Use the Admin Login sequence to gain privileges for changing the clock
+      if (await this.macro_adminLogin()) {
+        console.log("========= sync lock time");
+        await this.calibrateTimeCommand(); 
+        console.log("========= sync lock time done");
+        return true;
+      } else {
+        console.log("========= admin login failed for time sync");
+        return false;
+      }
     } catch (error) {
       console.error("Error setting lock time:", error);
       throw error;
