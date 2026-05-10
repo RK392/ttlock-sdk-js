@@ -165,6 +165,14 @@ export class OperationLogCommand extends Command {
           index = recStart + recLen;
 
           this.logs.push(log);
+
+          // For type 93 (OP_ADD_KEYBOARD_PASSWORD), store as duplicate in both positions
+          // because the device internally records this as two separate events
+          if (log.recordType === LogOperate.OP_ADD_KEYBOARD_PASSWORD) {
+            const duplicateLog = JSON.parse(JSON.stringify(log));
+            duplicateLog.recordNumber = this.sequence - 2;
+            this.logs.push(duplicateLog);
+          }
         }
       }
     }
