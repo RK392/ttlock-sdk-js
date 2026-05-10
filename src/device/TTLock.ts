@@ -15,6 +15,22 @@ import { sleep } from "../util/timingUtil";
 import { TTBluetoothDevice } from "./TTBluetoothDevice";
 import { LockParamsChanged, TTLockApi } from "./TTLockApi";
 
+function parseTTLockDateTime(dateTime: string): number | undefined {
+  if (!dateTime || typeof dateTime !== "string" || dateTime.length !== 12) {
+    return undefined;
+  }
+  const year = 2000 + parseInt(dateTime.substr(0, 2), 10);
+  const month = parseInt(dateTime.substr(2, 2), 10);
+  const day = parseInt(dateTime.substr(4, 2), 10);
+  const hour = parseInt(dateTime.substr(6, 2), 10);
+  const minute = parseInt(dateTime.substr(8, 2), 10);
+  const second = parseInt(dateTime.substr(10, 2), 10);
+  if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day) || Number.isNaN(hour) || Number.isNaN(minute) || Number.isNaN(second)) {
+    return undefined;
+  }
+  return Date.UTC(year, month - 1, day, hour, minute, second);
+}
+
 export interface TTLock {
   /** Event used by TTLockClient to update it's internal lock data */
   on(event: "dataUpdated", listener: (lock: TTLock) => void): this;
@@ -36,6 +52,7 @@ export class TTLock extends TTLockApi implements TTLock {
   private connected: boolean;
   private skipDataRead: boolean = false;
   private connecting: boolean = false;
+  private lastOperationTimestamp?: number;
 
   constructor(device: TTBluetoothDevice, data?: TTLockData) {
     super(device, data);
@@ -117,6 +134,10 @@ export class TTLock extends TTLockApi implements TTLock {
 
   isConnected(): boolean {
     return this.connected;
+  }
+
+  getLastOperationTimestamp(): number | undefined {
+    return this.lastOperationTimestamp;
   }
 
   async disconnect(): Promise<void> {
@@ -348,6 +369,12 @@ export class TTLock extends TTLockApi implements TTLock {
       console.log("========= check user time", psFromLock);
       console.log("========= lock");
       const lockData = await this.lockCommand(psFromLock);
+      if (lockData && lockData.dateTime) {
+        const timestamp = parseTTLockDateTime(lockData.dateTime);
+        if (typeof timestamp !== "undefined") {
+          this.lastOperationTimestamp = timestamp;
+        }
+      }
       console.log("========= lock", lockData);
       this.lockedStatus = LockedStatus.LOCKED;
       this.emit("locked", this);
@@ -377,6 +404,12 @@ export class TTLock extends TTLockApi implements TTLock {
       console.log("========= check user time", psFromLock);
       console.log("========= unlock");
       const unlockData = await this.unlockCommand(psFromLock);
+      if (unlockData && unlockData.dateTime) {
+        const timestamp = parseTTLockDateTime(unlockData.dateTime);
+        if (typeof timestamp !== "undefined") {
+          this.lastOperationTimestamp = timestamp;
+        }
+      }
       console.log("========= unlock", unlockData);
       this.lockedStatus = LockedStatus.UNLOCKED;
       this.emit("unlocked", this);
