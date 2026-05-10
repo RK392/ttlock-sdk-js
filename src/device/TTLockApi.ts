@@ -80,6 +80,7 @@ export abstract class TTLockApi extends EventEmitter {
   protected newEvents: boolean;
   protected deviceInfo?: DeviceInfoType;
   protected operationLog: LogEntry[];
+  protected proactiveLogFetching: boolean;
 
   // sensitive data
   protected privateData: PrivateDataType;
@@ -100,6 +101,7 @@ export abstract class TTLockApi extends EventEmitter {
     this.rssi = this.device.rssi;
     this.initialized = false; // just workaround for TypeScript
     this.operationLog = [];
+    this.proactiveLogFetching = true;
     if (typeof data != "undefined") {
       this.updateLockData(data);
     } else {
@@ -141,6 +143,9 @@ export abstract class TTLockApi extends EventEmitter {
     this.privateData.pwdInfo = privateData.pwdInfo;
     if (typeof data.operationLog != "undefined") {
       this.operationLog = data.operationLog;
+    }
+    if (typeof data.proactiveLogs != "undefined") {
+      this.proactiveLogFetching = data.proactiveLogs;
     }
     this.initialized = true;
   }

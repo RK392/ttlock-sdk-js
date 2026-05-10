@@ -26,4 +26,6 @@ export interface TTLockData {
   privateData: TTLockPrivateData;
   /** Operation Log entries */
   operationLog?: LogEntry[];
+  /** Whether proactive log fetching is enabled for this lock */
+  proactiveLogs?: boolean;
 }
