@@ -379,6 +379,12 @@ export class TTLock extends TTLockApi implements TTLock {
       console.log("========= lock", lockData);
       this.lockedStatus = LockedStatus.LOCKED;
       this.emit("locked", this);
+      // Fetch operation logs before the lock disconnects to save battery
+      try {
+        await this.getOperationLog();
+      } catch (error) {
+        console.error("Failed to fetch operation logs after lock", error);
+      }
     } catch (error) {
       console.error("Error locking the lock", error);
       return false;
@@ -414,6 +420,12 @@ export class TTLock extends TTLockApi implements TTLock {
       console.log("========= unlock", unlockData);
       this.lockedStatus = LockedStatus.UNLOCKED;
       this.emit("unlocked", this);
+      // Fetch operation logs before the lock disconnects to save battery
+      try {
+        await this.getOperationLog();
+      } catch (error) {
+        console.error("Failed to fetch operation logs after unlock", error);
+      }
       // if autolock is on, then emit locked event after the timeout has passed
       if (this.autoLockTime > 0) {
         setTimeout(() => {
