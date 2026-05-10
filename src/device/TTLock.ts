@@ -28,7 +28,8 @@ function parseTTLockDateTime(dateTime: string): number | undefined {
   if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day) || Number.isNaN(hour) || Number.isNaN(minute) || Number.isNaN(second)) {
     return undefined;
   }
-  return Date.UTC(year, month - 1, day, hour, minute, second);
+  // TTLock sends dateTime in local time, not UTC
+  return new Date(year, month - 1, day, hour, minute, second).getTime();
 }
 
 export interface TTLock {
