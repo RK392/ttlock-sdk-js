@@ -170,8 +170,10 @@ export class TTBluetoothDevice extends TTDevice implements TTBluetoothDevice {
       throw new Error("Command already in progress");
     }
     if (this.responses.length > 0) {
-      // should this be an error ?
-      throw new Error("Unprocessed responses");
+      // Clear orphaned responses from previous commands that may have been left in queue
+      // This can happen during reconnections or timing issues
+      console.warn(`Clearing ${this.responses.length} orphaned response(s) from previous command`);
+      this.responses = [];
     }
     const commandData = command.buildCommandBuffer();
     if (commandData) {
