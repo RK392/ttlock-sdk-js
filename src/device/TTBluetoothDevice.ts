@@ -63,19 +63,25 @@ export class TTBluetoothDevice extends TTDevice implements TTBluetoothDevice {
       // stop scan
       await this.scanner.stopScan();
       if (await this.device.connect()) {
-        // TODO: something happens here (disconnect) and it's stuck in limbo
-        console.log("BLE Device reading basic info");
-        await this.readBasicInfo();
-        console.log("BLE Device read basic info");
-        const subscribed = await this.subscribe();
-        console.log("BLE Device subscribed");
-        if (!subscribed) {
-          await this.device.disconnect();
+        try {
+          // TODO: something happens here (disconnect) and it's stuck in limbo
+          console.log("BLE Device reading basic info");
+          await this.readBasicInfo();
+          console.log("BLE Device read basic info");
+          const subscribed = await this.subscribe();
+          console.log("BLE Device subscribed");
+          if (!subscribed) {
+            await this.device.disconnect();
+            return false;
+          } else {
+            this.connected = true;
+            this.emit("connected");
+            return true;
+          }
+        } catch (error) {
+          console.error("Error during connection setup:", error);
+          await this.device.disconnect().catch(() => {});
           return false;
-        } else {
-          this.connected = true;
-          this.emit("connected");
-          return true;
         }
       } else {
         console.log("Connect failed");
