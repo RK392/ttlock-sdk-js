@@ -24,6 +24,7 @@ export class TTBluetoothDevice extends TTDevice implements TTBluetoothDevice {
   private scanner: ScannerInterface;
   private waitingForResponse: boolean = false;
   private responses: CommandEnvelope[] = [];
+  private disconnectedDuringSetup: boolean = false;
 
   private constructor(scanner: ScannerInterface) {
     super();
@@ -62,14 +63,27 @@ export class TTBluetoothDevice extends TTDevice implements TTBluetoothDevice {
     if (typeof this.device != "undefined" && this.device.connectable) {
       // stop scan
       await this.scanner.stopScan();
+      // Reset the disconnect flag before starting a new connection attempt
+      this.disconnectedDuringSetup = false;
       if (await this.device.connect()) {
         try {
-          // TODO: something happens here (disconnect) and it's stuck in limbo
           console.log("BLE Device reading basic info");
           await this.readBasicInfo();
           console.log("BLE Device read basic info");
+          // Check if a disconnect occurred during readBasicInfo
+          if (this.disconnectedDuringSetup) {
+            console.log("BLE Device disconnected during readBasicInfo, aborting connect");
+            this.disconnectedDuringSetup = false;
+            return false;
+          }
           const subscribed = await this.subscribe();
           console.log("BLE Device subscribed");
+          // Check if a disconnect occurred during subscribe
+          if (this.disconnectedDuringSetup) {
+            console.log("BLE Device disconnected during subscribe, aborting connect");
+            this.disconnectedDuringSetup = false;
+            return false;
+          }
           if (!subscribed) {
             await this.device.disconnect();
             return false;
@@ -80,6 +94,7 @@ export class TTBluetoothDevice extends TTDevice implements TTBluetoothDevice {
           }
         } catch (error) {
           console.error("Error during connection setup:", error);
+          this.disconnectedDuringSetup = false;
           await this.device.disconnect().catch(() => {});
           return false;
         }
@@ -102,6 +117,8 @@ export class TTBluetoothDevice extends TTDevice implements TTBluetoothDevice {
 
   private async onDeviceDisconnected() {
     this.connected = false;
+    // Signal to connect() that a disconnect happened during setup
+    this.disconnectedDuringSetup = true;
     // Clear pending command queues when connection drops
     if (this.waitingForResponse) {
       this.waitingForResponse = false;
@@ -172,6 +189,9 @@ export class TTBluetoothDevice extends TTDevice implements TTBluetoothDevice {
   }
 
   async sendCommand(command: CommandEnvelope, waitForResponse: boolean = true, ignoreCrc: boolean = false): Promise<CommandEnvelope | void> {
+    if (!this.connected) {
+      throw new Error("Cannot send command: device is not connected");
+    }
     if (this.waitingForResponse) {
       throw new Error("Command already in progress");
     }
